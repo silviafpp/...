@@ -4,20 +4,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.buscardapp.ui.theme.BusCardAppTheme
 
 class MainActivity : ComponentActivity() {
 
-    // Instancia o ViewModel para ser usado na AuthScreen
-    private val authViewModel: AuthViewModel by viewModels()
+    // Instancia o teu ViewModel que já tens pronto
+    private val authViewModel by viewModels<AuthViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
         super.onCreate(savedInstanceState)
+
         setContent {
             BusCardAppTheme {
-                AuthScreen(viewModel = authViewModel)
+                // Chamamos o NavGraph que vai gerir se mostra Login ou Home
+                NavGraph(authViewModel)
             }
         }
     }

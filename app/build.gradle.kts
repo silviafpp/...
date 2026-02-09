@@ -39,6 +39,7 @@ android {
 
     // Compose
 dependencies {
+    implementation(libs.androidx.navigation.compose)
     // 1. JETPACK COMPOSE (Using BOM for version management)
     // The BOM ensures all compose libraries (ui, material3, etc.) are compatible.
     val composeBom = platform("androidx.compose:compose-bom:2025.12.00")
@@ -68,7 +69,10 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    //icons
+    implementation("androidx.compose.material:material-icons-extended")
 
+    implementation("androidx.navigation:navigation-compose:2.8.5")
 }
 
 
