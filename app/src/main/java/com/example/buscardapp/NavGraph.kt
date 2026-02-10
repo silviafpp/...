@@ -1,30 +1,30 @@
 package com.example.buscardapp
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.*
+import androidx.navigation.compose.*
 
 @Composable
 fun NavGraph(
     authViewModel: AuthViewModel,
     isDarkMode: Boolean,
     onThemeToggle: (Boolean) -> Unit,
-    onCardClick: () -> Unit // <--- 1. NOVO PARÂMETRO
+    onCardClick: () -> Unit
 ) {
     val authState by authViewModel.authState.collectAsState()
     val navController = rememberNavController()
 
-    // Lógica de Autenticação
     if (authState != "Login efetuado!" && authState != "Bem-vindo!") {
         AuthScreen(authViewModel)
     } else {
-        // Passamos o onCardClick para a MainScreen
-        MainScreen(
-            authViewModel = authViewModel,
-            isDarkMode = isDarkMode,
-            onThemeToggle = onThemeToggle,
-            onCardClick = onCardClick // <--- 2. PASSAR PARA A MAIN SCREEN
-        )
+        NavHost(navController = navController, startDestination = "main_screen") {
+            composable("main_screen") {
+                MainScreen(
+                    authViewModel = authViewModel,
+                    isDarkMode = isDarkMode,
+                    onThemeToggle = onThemeToggle,
+                    onCardClick = onCardClick
+                )
+            }
+        }
     }
 }

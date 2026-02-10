@@ -21,7 +21,7 @@ fun MainScreen(
     authViewModel: AuthViewModel,
     isDarkMode: Boolean,
     onThemeToggle: (Boolean) -> Unit,
-    onCardClick: () -> Unit // <--- 1. ADICIONADO AQUI
+    onCardClick: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -31,16 +31,11 @@ fun MainScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(navController = navController, startDestination = "home") {
                 composable("home") {
-                    // 2. PASSAR PARA A HOMESCREEN (onde está o desenho do cartão)
                     HomeScreen(onCardClick = onCardClick)
                 }
                 composable("routes") { RoutesScreen() }
                 composable("profile") {
-                    ProfileScreen(
-                        authViewModel = authViewModel,
-                        isDarkMode = isDarkMode,
-                        onThemeChange = onThemeToggle
-                    )
+                    ProfileScreen(authViewModel, isDarkMode, onThemeToggle)
                 }
             }
         }
@@ -65,10 +60,12 @@ fun BottomNavigationBar(navController: NavHostController) {
                 label = { Text(item.title) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        popUpTo(navController.graph.startDestinationId) { saveState = true }
-                        launchSingleTop = true
-                        restoreState = true
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 }
             )

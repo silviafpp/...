@@ -1,133 +1,206 @@
 package com.example.buscardapp
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.auth.auth
 
 @Composable
 fun ProfileScreen(
-    authViewModel: AuthViewModel, // Removido o = viewModel() aqui para evitar conflitos de estado
+    authViewModel: AuthViewModel,
     isDarkMode: Boolean,
     onThemeChange: (Boolean) -> Unit
 ) {
-    val user = SupabaseClient.supabase.auth.currentUserOrNull()
-    val email = user?.email ?: "utilizador@email.com"
+    // 1. Estados para os dados vindos do Supabase
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    var userCard by remember { mutableStateOf<UserCard?>(null) }
+    var userEmail by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-    ) {
-        // TÍTULO
-        Text(
-            text = "Perfil",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
+    // 2. Lógica para carregar os dados
+    LaunchedEffect(Unit) {
+        try {
+            val user = SupabaseClient.supabase.auth.currentUserOrNull()
+            if (user != null) {
+                userEmail = user.email ?: "" // Email vem diretamente da conta
+                val uid = user.id
 
-        Spacer(modifier = Modifier.height(24.dp))
+                // Busca o nome real na tabela 'profiles' (onde o trigger inseriu os dados)
+                userProfile = SupabaseClient.supabase.postgrest["profiles"]
+                    .select { filter { eq("id", uid) } }
+                    .decodeSingleOrNull<UserProfile>()
 
-        // CARD UTILIZADOR
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            )
+                // Busca os dados do cartão (saldo/viagens)
+                userCard = SupabaseClient.supabase.postgrest["user_cards"]
+                    .select { filter { eq("user_id", uid) } }
+                    .decodeSingleOrNull<UserCard>()
+            }
+        } catch (e: Exception) {
+            println("Erro ao carregar perfil: ${e.message}")
+        } finally {
+            isLoading = false
+        }
+    }
+
+    // 3. Processamento do Nome (Concatena Primeiro + Último)
+    val nomeExibicao = if (userProfile != null && !userProfile?.firstName.isNullOrBlank()) {
+        "${userProfile?.firstName} ${userProfile?.lastName}"
+    } else {
+        "Utilizador" // Fallback caso a tabela ainda esteja vazia
+    }
+
+    if (isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Color(0xFF006D4E))
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(if (isDarkMode) Color(0xFF121212) else Color(0xFFF8F9FA))
+                .verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // CABEÇALHO VERDE
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(240.dp)
+                    .background(
+                        brush = Brush.verticalGradient(listOf(Color(0xFF006D4E), Color(0xFF004D36))),
+                        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp)
+                    )
+                    .padding(24.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(50.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(text = email, fontWeight = FontWeight.Bold)
-                    Text(text = "S. Miguel, Açores", fontSize = 12.sp, color = Color.Gray)
+                Column(modifier = Modifier.padding(top = 20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Avatar com a inicial do utilizador
+                        Box(
+                            modifier = Modifier
+                                .size(75.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF00E676)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = nomeExibicao.take(1).uppercase(),
+                                color = Color.White,
+                                fontSize = 32.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(20.dp))
+
+                        Column {
+                            // NOME REAL VINDO DA DB
+                            Text(
+                                text = nomeExibicao,
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            // EMAIL VINDO DO AUTH
+                            Text(
+                                text = userEmail,
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = "Configurações",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
-
-        // SELETOR DE TEMA
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
-                    contentDescription = null,
-                    tint = Color.Gray
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(text = "Modo Escuro")
+            // CARDS DE SALDO E VIAGENS
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .offset(y = (-40).dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                InfoCard(Modifier.weight(1f), "${userCard?.saldo ?: 0.0}€", "Saldo", Icons.Default.AccountBalanceWallet)
+                InfoCard(Modifier.weight(1f), "${userCard?.tripsLeft ?: 0}", "Viagens", Icons.Default.ConfirmationNumber)
             }
-            Switch(
-                checked = isDarkMode,
-                onCheckedChange = { onThemeChange(it) }
-            )
-        }
 
-        ProfileOptionItem(icon = Icons.Default.Edit, title = "Editar Perfil") { /* Futuro */ }
-        ProfileOptionItem(icon = Icons.Default.CreditCard, title = "O meu Cartão") { /* Futuro */ }
+            // MENU DE CONFIGURAÇÕES
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    "GERIR CONTA",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
 
-        Spacer(modifier = Modifier.weight(1f))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDarkMode) Color(0xFF1E1E1E) else Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    // MODO ESCURO
+                    Row(
+                        Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Brightness4, null, tint = Color(0xFF006D4E))
+                        Text(
+                            "Modo Escuro",
+                            Modifier.padding(start = 12.dp).weight(1f),
+                            color = if (isDarkMode) Color.White else Color.Black
+                        )
+                        Switch(checked = isDarkMode, onCheckedChange = onThemeChange)
+                    }
 
-        // BOTÃO DE LOGOUT CORRIGIDO
-        Button(
-            onClick = { authViewModel.signOut() },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Icon(Icons.Default.Logout, contentDescription = null, tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Sair da Conta", color = Color.White)
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+
+                    // SAIR (CHAMA A FUNÇÃO DO TEU VIEWMODEL)
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { authViewModel.logout() }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Logout, null, tint = Color.Red)
+                        Text("Terminar Sessão", color = Color.Red, modifier = Modifier.padding(start = 12.dp))
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ProfileOptionItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+fun InfoCard(modifier: Modifier, value: String, label: String, icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    Card(
+        modifier = modifier.height(110.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Icon(icon, contentDescription = null, tint = Color.Gray)
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text = title, modifier = Modifier.weight(1f))
-        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.LightGray)
+        Column(
+            modifier = Modifier.fillMaxSize().padding(12.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, null, tint = Color(0xFF006D4E), modifier = Modifier.size(24.dp))
+            Text(value, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+            Text(label, fontSize = 12.sp, color = Color.Gray)
+        }
     }
 }

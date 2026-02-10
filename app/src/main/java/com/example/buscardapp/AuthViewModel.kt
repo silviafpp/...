@@ -27,7 +27,7 @@ class AuthViewModel : ViewModel() {
     private val auth = SupabaseClient.supabase.auth
     private val WEB_CLIENT_ID = "744647664470-8odukj93lh37a56vdvom0ha3qiefo8fr.apps.googleusercontent.com"
 
-    // Função auxiliar para o Nonce do Google
+    // Função auxiliar para o Nonce do Google (Mantida conforme o teu original)
     private fun generateNonce(): Pair<String, String> {
         val rawNonce = UUID.randomUUID().toString()
         val bytes = rawNonce.toByteArray()
@@ -37,7 +37,7 @@ class AuthViewModel : ViewModel() {
         return Pair(rawNonce, hashedNonce)
     }
 
-    // --- NOVA FUNÇÃO GOOGLE ---
+    // --- GOOGLE SIGN IN ---
     fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             _authState.value = "A conectar com Google..."
@@ -64,7 +64,7 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // --- CÓDIGO ORIGINAL MANTIDO ---
+    // --- SIGN UP COM NOMES (Lógica adicionada para os Profiles) ---
     fun signUpWithEmail(emailInput: String, passInput: String, firstName: String, lastName: String) {
         viewModelScope.launch {
             try {
@@ -72,6 +72,7 @@ class AuthViewModel : ViewModel() {
                 auth.signUpWith(Email) {
                     email = emailInput
                     password = passInput
+                    // Enviamos os nomes para o metadados que o Trigger do SQL vai ler
                     data = buildJsonObject {
                         put("first_name", firstName)
                         put("last_name", lastName)
@@ -111,14 +112,25 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    // No AuthViewModel.kt
+    // Mantive as tuas duas funções de saída para garantir compatibilidade
     fun signOut() {
         viewModelScope.launch {
             try {
                 auth.signOut()
-                _authState.value = "Logout efetuado" // Isto fará o NavGraph voltar ao ecrã de Login
+                _authState.value = "Logout efetuado"
             } catch (e: Exception) {
                 _authState.value = "Erro ao sair: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun logout() {
+        viewModelScope.launch {
+            try {
+                auth.signOut()
+                _authState.value = "Logout efetuado"
+            } catch (e: Exception) {
+                _authState.value = "Erro ao sair: ${e.message}"
             }
         }
     }

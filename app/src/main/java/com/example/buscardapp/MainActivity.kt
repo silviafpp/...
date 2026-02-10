@@ -23,8 +23,10 @@ class MainActivity : ComponentActivity() {
                         authViewModel = authViewModel,
                         isDarkMode = isDarkMode,
                         onThemeToggle = { isDarkMode = it },
-                        // Esta função deve ser chamada quando clicares no cartão no teu Screen
-                        onCardClick = { showNfcSheet = true }
+                        onCardClick = {
+                            // VOLTOU A SER DIRETO: Clicou, abriu.
+                            showNfcSheet = true
+                        }
                     )
 
                     if (showNfcSheet) {

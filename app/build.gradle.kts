@@ -73,6 +73,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
 
     implementation("androidx.navigation:navigation-compose:2.8.5")
+
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 }
 
 
