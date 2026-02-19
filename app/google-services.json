@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "674496926042",
+    "project_id": "buscardapp-0e6a2b10",
+    "storage_bucket": "buscardapp-0e6a2b10.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674496926042:android:894a01a37024ed9c17a363",
+        "android_client_info": {
+          "package_name": "com.example.buscardapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEshYCLMXivSgksTRDMKh5sT_Lajm3a04"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

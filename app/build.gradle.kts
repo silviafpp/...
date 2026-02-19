@@ -1,8 +1,11 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.application) // Este já é o "com.android.application"
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id("org.jetbrains.kotlin.plugin.serialization")}
+    id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.gms.google-services") // ADICIONE ESTA LINHA para o Firebase/SHA-256 funcionar
+    // REMOVI a linha id("com.android.application") que estava a causar o erro
+}
 
 android {
     namespace = "com.example.buscardapp"
@@ -75,6 +78,10 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.5")
 
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
+
+    implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
+
+
 }
 
 

@@ -3,6 +3,7 @@ package com.example.buscardapp
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
+import io.github.jan.supabase.auth.auth
 
 /* ---------------- SUPABASE CLIENT ---------------- */
 
@@ -12,6 +13,10 @@ object SupabaseClient {
         supabaseKey = "sb_publishable_S7MdRy3B-UhFt2Wc1nYPDg_MlS_Ylc7"
     ) {
         install(Postgrest)
-        install(Auth)
+        install(Auth) {
+            // Isto ajuda a evitar o erro de refresh token
+            autoLoadFromStorage = true
+            alwaysAutoRefresh = true
+        }
     }
 }

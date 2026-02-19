@@ -31,11 +31,23 @@ fun MainScreen(
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(navController = navController, startDestination = "home") {
                 composable("home") {
-                    HomeScreen(onCardClick = onCardClick)
+                    // Aqui chamamos a HomeScreen.
+                    // Como a lógica de "Diário/Semanal/Mensal" está lá dentro,
+                    // não precisamos de passar o onAddCardClick nem criar rotas novas.
+                    HomeScreen(
+                        isDarkMode = isDarkMode,
+                        onCardClick = onCardClick
+                    )
                 }
+
                 composable("routes") { RoutesScreen() }
+
                 composable("profile") {
-                    ProfileScreen(authViewModel, isDarkMode, onThemeToggle)
+                    ProfileScreen(
+                        authViewModel = authViewModel,
+                        isDarkMode = isDarkMode,
+                        onThemeChange = onThemeToggle
+                    )
                 }
             }
         }
